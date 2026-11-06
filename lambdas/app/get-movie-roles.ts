@@ -21,6 +21,16 @@ export const handler = async (
     return response(400, { message: "movieID must be a positive integer" });
   }
   try {
+    const actorIdParam = event.queryStringParameters?.actor;
+    let actorId: number | undefined;
+
+    if (actorIdParam !== undefined){
+      actorId = parseId(actorIdParam);
+      if(actorId === undefined){
+        return response(400, { message: "actor must be a positive integer"})
+      }
+    }
+
     const queryResult = await ddb.send(
       new QueryCommand({
         TableName: tableName,
@@ -30,8 +40,10 @@ export const handler = async (
       })
     );
 
-    const resultItems = queryResult.Items ?? [];
-    return response(200, { data: resultItems.filter(isRoleItem).map(toRole) });
+    const roles = (queryResult.Items ?? []).filter(isRoleItem).map(toRole);
+    const filtered = actorId === undefined ? roles : roles.filter((role) => role.actorId === actorId);
+
+    return response(200, { data: filtered});
   } catch (err) {
     console.error("DynamoDB error:", err);
     return response(500, {

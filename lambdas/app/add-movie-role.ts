@@ -17,7 +17,7 @@ export const handler = async (
   };
 
   try {
-    //  TOD∏O - Add role if its IDs are valid
+    //  TODO - Add role if its IDs are valid
     return response(201, { message: "Role added", data: role });
   } catch (err) {
     console.error("DynamoDB error:", err);
