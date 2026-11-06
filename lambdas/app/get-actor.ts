@@ -3,9 +3,12 @@ import { GetCommand } from "@aws-sdk/lib-dynamodb";
 import {
   actorKey,
   ddb,
+  isRoleItem,
+  movieKey,
   parseId,
   tableName,
   toActor,
+  toRole,
 } from "../shared/db";
 import { response } from "../shared/http";
 import { logRequest } from "../shared/request-logger";
@@ -38,7 +41,20 @@ export const handler = async (
     }
     const actor = toActor(actorResult.Item);
 
-    return response(200, { data: actor });
+    let roles: string | undefined;
+    if (movieId !== undefined) {
+      const roleResult = await ddb.send(
+        new GetCommand({
+          TableName: tableName,
+          Key: { PK: actorKey(actorId), SK: movieKey(movieId)}
+        })
+      );
+      if(roleResult.Item && isRoleItem(roleResult.Item)){
+        roles = toRole(roleResult.Item).roleDescription;
+      }
+    }
+
+    return response(200, { data: roles === undefined ? actor : { ...actor, roles} });
   } catch (err) {
     console.error("DynamoDB error:", err);
     return response(500, { message: "Internal server error", error: err });
