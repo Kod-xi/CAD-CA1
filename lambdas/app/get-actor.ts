@@ -41,20 +41,20 @@ export const handler = async (
     }
     const actor = toActor(actorResult.Item);
 
-    let roles: string | undefined;
+    let roleDescription: string | undefined;
     if (movieId !== undefined) {
       const roleResult = await ddb.send(
         new GetCommand({
           TableName: tableName,
-          Key: { PK: actorKey(actorId), SK: movieKey(movieId)}
+          Key: { PK: movieKey(movieId), SK: actorKey(actorId)}
         })
       );
       if(roleResult.Item && isRoleItem(roleResult.Item)){
-        roles = toRole(roleResult.Item).roleDescription;
+        roleDescription = toRole(roleResult.Item).roleDescription;
       }
     }
 
-    return response(200, { data: roles === undefined ? actor : { ...actor, roles} });
+    return response(200, { data: roleDescription === undefined ? actor : { ...actor, roleDescription} });
   } catch (err) {
     console.error("DynamoDB error:", err);
     return response(500, { message: "Internal server error", error: err });
