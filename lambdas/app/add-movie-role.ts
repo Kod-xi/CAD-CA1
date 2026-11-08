@@ -2,10 +2,14 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { GetCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { actorKey, ddb, movieKey, type Role, tableName } from "../shared/db";
 import { isResponse, parseJsonObject, response } from "../shared/http";
+import { logRequest } from "../shared/request-logger";
 
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+
+  logRequest(event);
+
   const body = parseJsonObject(event);
   if (isResponse(body)) return body;
 
