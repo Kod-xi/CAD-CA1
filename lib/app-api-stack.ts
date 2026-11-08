@@ -50,6 +50,7 @@ export class AppApiStack extends cdk.Stack {
 
     table.grantReadData(getMovieRolesFn);
     table.grantReadData(getActorFn);
+    table.grantReadWriteData(addMovieRoleFn);
 
     // Sample data, written once when the stack is created.
     const items = seedItems();
@@ -91,11 +92,22 @@ export class AppApiStack extends cdk.Stack {
       authorizer: userAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,
     };
+    const adminApiKey = new apig.ApiKey(this, 'AdminApiKey');
+    api.addUsagePlan('AdminUsagePlan', {
+      apiStages: [{ api, stage: api.deploymentStage }],
+    }).addApiKey(adminApiKey);
+
     // Routes
     const moviesResource = api.root.addResource('movies');
 
     const movieRolesResource = moviesResource.addResource('{movieID}').addResource('roles');
     movieRolesResource.addMethod('GET', new apig.LambdaIntegration(getMovieRolesFn) );
+
+    moviesResource.addResource('roles').addMethod(
+      'POST',
+      new apig.LambdaIntegration(addMovieRoleFn),
+      { apiKeyRequired: true },
+    );
 
     api.root
       .addResource('actors')
