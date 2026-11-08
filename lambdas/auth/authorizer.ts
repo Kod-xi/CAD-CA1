@@ -35,9 +35,17 @@ const parseCookies = (header?: string): Record<string, string> => {
   const cookies: Record<string, string> = {};
   for (const part of header?.split(';') ?? []) {
     const [name, ...value] = part.trim().split('=');
-    if (name) cookies[name] = decodeURIComponent(value.join('='));
+    if (name) cookies[name] = safeDecodeURIComponent(value.join('='));
   }
   return cookies;
+};
+
+const safeDecodeURIComponent = (value: string): string => {
+  try{
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 };
 
 const policy = (
