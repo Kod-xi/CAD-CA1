@@ -3,6 +3,13 @@ import { GetCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { actorKey, ddb, movieKey, type Role, tableName } from "../shared/db";
 import { isResponse, parseJsonObject, response } from "../shared/http";
 import { logRequest } from "../shared/request-logger";
+import Ajv from "ajv";
+import schema from "../shared/schema.json";
+
+const ajv = new Ajv();
+const isValidRolePayload = ajv.compile<Role>(
+  schema.definitions["Role"] || {}
+);
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -13,35 +20,14 @@ export const handler = async (
   const body = parseJsonObject(event);
   if (isResponse(body)) return body;
 
-  if (
-    typeof body.movieId !== "number" ||
-    !Number.isSafeInteger(body.movieId) ||
-    body.movieId <= 0 ||
-    typeof body.actorId !== "number" ||
-    !Number.isSafeInteger(body.actorId) ||
-    body.actorId <= 0
-  ) {
+  if(!isValidRolePayload(body)) {
     return response(400, {
-      message: "movieId and actorId must be positive integers.",
-    });
-  }
-  if (
-    typeof body.roleName !== "string" ||
-    body.roleName.trim() === "" ||
-    typeof body.roleDescription !== "string" ||
-    body.roleDescription.trim() === ""
-  ) {
-    return response(400, {
-      message: "roleName and roleDescription must be non-empty strings.",
+      message: "Invalid body in request",
+      errors: isValidRolePayload.errors,
     });
   }
 
-  const role: Role = {
-    movieId: body.movieId,
-    actorId: body.actorId,
-    roleName: body.roleName,
-    roleDescription: body.roleDescription,
-  };
+  const role: Role = body
 
   try {
     const [movieResult, actorResult] = await Promise.all([
