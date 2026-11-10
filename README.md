@@ -128,8 +128,5 @@ The application should log all user requests to CloudWatch logs. A log entry sho
      1. Add error handling to GET processing.
      1. Ensure authentication works for GETs.
      1. Repeat the above steps for POST (excluding auth).
-     1. Solve the API key requirement.
-     1. Consider other error cases.
-     1. Refactor at each stage to improve code quality, e.g. DRY, variable naming, redundant debugging code, etc.
-
+y
 [moodle]: https://moodle.setu.ie/mod/assign/view.php?id=4868989
